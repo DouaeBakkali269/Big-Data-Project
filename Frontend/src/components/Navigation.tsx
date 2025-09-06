@@ -26,16 +26,16 @@ const Navigation = () => {
   ];
 
   return (
-    <nav className="bg-card border-b border-border shadow-academic">
+    <nav className="sticky top-0 z-50 glass elevate">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <div className="flex items-center">
             <NavLink to="/dashboard" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                <GraduationCap className="w-5 h-5 text-primary-foreground" />
+              <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
+                <GraduationCap className="w-6 h-6 text-primary-foreground" />
               </div>
-              <span className="text-xl font-bold text-foreground">LassqatHub</span>
+              <span className="text-2xl font-bold text-foreground">LassqatHub</span>
             </NavLink>
           </div>
 
@@ -45,26 +45,26 @@ const Navigation = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input 
                 placeholder="Search Lassqat, Modules, or Exams..."
-                className="pl-10 w-full"
+                className="pl-10 w-full h-11 rounded-full focus-visible:ring-2 focus-visible:ring-primary/20"
               />
             </div>
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-1">
+      <div className="hidden md:flex items-center space-x-1">
             {navItems.map((item) => (
               <NavLink
                 key={item.name}
                 to={item.path}
                 className={({ isActive }) =>
-                  `flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
+                  `flex items-center space-x-2 px-4 py-3 rounded-full text-sm font-medium transition-colors duration-200 ${
                     isActive
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+            ? 'bg-primary text-primary-foreground shadow'
+            : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                   }`
                 }
               >
-                <item.icon className="w-4 h-4" />
+                <item.icon className="w-5 h-5" />
                 <span>{item.name}</span>
               </NavLink>
             ))}
@@ -90,7 +90,7 @@ const Navigation = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input 
                   placeholder="Search Lassqat, Modules, or Exams..."
-                  className="pl-10 w-full"
+                  className="pl-10 w-full h-11 rounded-full"
                 />
               </div>
             </div>
@@ -100,15 +100,15 @@ const Navigation = () => {
                   key={item.name}
                   to={item.path}
                   className={({ isActive }) =>
-                    `flex items-center space-x-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors duration-200 ${
+                    `flex items-center space-x-3 px-4 py-4 rounded-xl text-sm font-medium transition-colors duration-200 ${
                       isActive
-                        ? 'bg-primary text-primary-foreground'
+                        ? 'bg-primary text-primary-foreground shadow'
                         : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                     }`
                   }
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <item.icon className="w-5 h-5" />
+                  <item.icon className="w-6 h-6" />
                   <span>{item.name}</span>
                 </NavLink>
               ))}

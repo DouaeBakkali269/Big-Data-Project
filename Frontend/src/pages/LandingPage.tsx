@@ -11,6 +11,7 @@ import {
   Star,
   ArrowRight
 } from 'lucide-react';
+import { BrandLogo } from '@/components/BrandLogo';
 import heroImage from '@/assets/hero-students.jpg';
 
 const LandingPage = () => {
@@ -61,7 +62,7 @@ const LandingPage = () => {
                 <Button variant="ghost">Login</Button>
               </Link>
               <Link to="/dashboard">
-                <Button variant="hero">Get Started</Button>
+                <Button variant="hero">Sign up</Button>
               </Link>
             </div>
           </div>
@@ -73,7 +74,15 @@ const LandingPage = () => {
         <div className="bg-gradient-hero">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <div className="text-center lg:text-left">
+              <div className="relative text-center lg:text-left">
+                {/* Watermark logo behind hero copy */}
+                <img
+                  src="/ensias-logo.svg"
+                  aria-hidden
+                  className="hidden md:block pointer-events-none select-none absolute -top-10 -left-6 w-40 md:w-60 opacity-10 blur-[1px] rotate-[-6deg]"
+                />
+                {/* ENSIAS Logo with animated shine badge */}
+                <BrandLogo variant="shine" size="md" className="mb-4" />
                 <h1 className="text-4xl md:text-6xl font-bold text-primary-foreground mb-6 leading-tight">
                   Smart way to prepare for{' '}
                   <span className="text-primary-foreground/90">ENSIAS exams</span>
@@ -99,12 +108,6 @@ const LandingPage = () => {
                   alt="ENSIAS students collaborating" 
                   className="rounded-2xl shadow-hover w-full"
                 />
-                <div className="absolute -bottom-6 -right-6 bg-card rounded-xl p-4 shadow-card hidden md:block">
-                  <div className="flex items-center space-x-2">
-                    <Star className="w-5 h-5 text-yellow-500 fill-current" />
-                    <span className="font-semibold">4.9/5 Student Rating</span>
-                  </div>
-                </div>
               </div>
             </div>
           </div>

@@ -2,78 +2,49 @@ import Navigation from '@/components/Navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  BookOpen, 
-  TrendingUp, 
-  Clock, 
-  Star,
-  FileText,
-  Video,
-  Users,
-  ArrowRight,
-  Calendar,
-  Award,
-  Brain,
-  Zap,
-  Target,
-  Trophy,
-  Plus
-} from 'lucide-react';
+import { BookOpen, Clock, FileText, Calendar, Target, Trophy, MessageSquare } from 'lucide-react';
+import { getCurrentUser } from '@/lib/user';
+import { useNavigate } from 'react-router-dom';
+import useCommunityHighlights from '@/hooks/useCommunityHighlights';
 
 const Dashboard = () => {
-  const recentLassqat = [
+  const navigate = useNavigate();
+  const user = getCurrentUser();
+  // Lassqat où l'étudiant est INSCRIT (abonné)
+  const subscribedLassqat = [
     {
-      id: 1,
-      title: 'OOP Concepts Summary',
-      module: 'Object Oriented Programming',
-      type: 'Summary',
-      rating: 4.8,
-      downloads: 145,
-      uploadedBy: 'Ahmed Bennani',
-      uploadedAt: '2 hours ago'
+      id: 101,
+      title: 'POO — Patterns de Conception (Résumé PDF)',
+      module: 'Programmation Orientée Objet',
+      element: 'Patterns de Conception',
+      year: '2025',
+      major: 'GL',
+      level: '2A',
+      when: 'Demain, 18:00',
     },
     {
-      id: 2,
-      title: 'Network Protocols Explained',
-      module: 'Computer Networks',
-      type: 'Explanation',
-      rating: 4.9,
-      downloads: 203,
-      uploadedBy: 'Sara El Amrani',
-      uploadedAt: '1 day ago'
+      id: 102,
+      title: 'BD — Transactions & Verrous (Vidéo)',
+      module: 'Systèmes de BD',
+      element: 'Transactions et Verrous',
+      year: '2025',
+      major: 'GL',
+      level: '2A',
+      when: 'Lun 14:00',
     },
     {
-      id: 3,
-      title: 'Database Design - Final Exam 2023',
-      module: 'Database Systems',
-      type: 'Exam Correction',
-      rating: 4.7,
-      downloads: 98,
-      uploadedBy: 'Omar Idrissi',
-      uploadedAt: '3 days ago'
-    }
+      id: 103,
+      title: 'IA — Métriques de ML (Flashcards)',
+      module: 'Intelligence Artificielle',
+      element: 'Métriques de Machine Learning',
+      year: '2025',
+      major: 'GL',
+      level: '2A',
+      when: 'Mer 10:00',
+    },
   ];
-
-  const upcomingExams = [
-    {
-      module: 'Artificial Intelligence',
-      date: 'Dec 15, 2024',
-      timeLeft: '2 weeks',
-      prepared: 75
-    },
-    {
-      module: 'Software Engineering',
-      date: 'Dec 20, 2024',
-      timeLeft: '3 weeks',
-      prepared: 60
-    },
-    {
-      module: 'Mobile Development',
-      date: 'Jan 8, 2025',
-      timeLeft: '1 month',
-      prepared: 40
-    }
-  ];
+  const filteredSubscribed = subscribedLassqat.filter(i => i.major === user.major && i.level === user.level);
+  const highlights = useCommunityHighlights();
 
   const quickStats = [
     { label: 'XP Gagné', value: '1,245', icon: Trophy, change: '+45' },
@@ -140,149 +111,111 @@ const Dashboard = () => {
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Recent Lassqat */}
+          {/* Mes Lassqat — Inscrits (Home) */}
           <div className="lg:col-span-2">
             <Card className="shadow-card border-0 bg-gradient-card">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-primary" />
-                    Trending Lassqat
-                  </CardTitle>
-                  <CardDescription>Most popular study materials this week</CardDescription>
-                </div>
-                <Button variant="ghost" size="sm">
-                  View All
-                  <ArrowRight className="w-4 h-4 ml-1" />
-                </Button>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {recentLassqat.map((lassqa) => (
-                  <div key={lassqa.id} className="border border-border rounded-lg p-4 hover:shadow-academic transition-all duration-200 bg-background/50">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-foreground mb-1">{lassqa.title}</h3>
-                        <p className="text-sm text-muted-foreground mb-2">{lassqa.module}</p>
-                        <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                          <span>by {lassqa.uploadedBy}</span>
-                          <span>•</span>
-                          <span>{lassqa.uploadedAt}</span>
-                          <span>•</span>
-                          <span>{lassqa.downloads} downloads</span>
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <Badge variant="secondary">{lassqa.type}</Badge>
-                        <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                          <span className="text-sm font-medium">{lassqa.rating}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="default">View</Button>
-                      <Button size="sm" variant="outline">Download</Button>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Upcoming Exams */}
-          <div>
-            <Card className="shadow-card border-0 bg-gradient-card mb-6">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-primary" />
-                  Upcoming Exams
+                  À venir — Mes Lassqat (Inscrits)
                 </CardTitle>
-                <CardDescription>Stay prepared for your exams</CardDescription>
+                <CardDescription>Vos prochains contenus à réviser</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {upcomingExams.map((exam, index) => (
-                  <div key={index} className="border border-border rounded-lg p-3 bg-background/50">
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-medium text-foreground text-sm">{exam.module}</h4>
-                      <Badge variant="outline" className="text-xs">{exam.timeLeft}</Badge>
+                {filteredSubscribed.length === 0 && (
+                  <div className="border border-dashed border-border rounded-lg p-6 text-center text-sm text-muted-foreground">
+                    Aucun Lassqat correspondant à votre filière/niveau pour le moment.
+                    <div className="mt-3">
+                      <Button size="sm" variant="outline" onClick={() => navigate('/lassqat')}>Explorer Lassqat</Button>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-3">{exam.date}</p>
-                    <div className="mb-2">
-                      <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                        <span>Preparation</span>
-                        <span>{exam.prepared}%</span>
+                  </div>
+                )}
+                {filteredSubscribed.map((item) => (
+                  <div key={item.id} className="border border-border rounded-lg p-4 bg-background/50">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className="font-medium text-foreground">{item.title}</div>
+                        <div className="text-sm text-muted-foreground">{item.module}</div>
                       </div>
-                      <div className="w-full bg-muted rounded-full h-2">
-                        <div 
-                          className="bg-primary h-2 rounded-full transition-all duration-300" 
-                          style={{ width: `${exam.prepared}%` }}
-                        ></div>
-                      </div>
+                      <Badge variant="outline">{item.when}</Badge>
                     </div>
-                    <Button size="sm" variant="outline" className="w-full text-xs">
-                      Study Now
-                    </Button>
+                    <div className="mt-3 flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() =>
+                          navigate(
+                            `/element/${item.year}/${item.major}/${item.level}/${encodeURIComponent(item.module)}/${encodeURIComponent(item.element)}`
+                          )
+                        }
+                      >
+                        Ouvrir
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          navigate(
+                            `/lassqat-planning?level=${encodeURIComponent(item.level)}&module=${encodeURIComponent(item.module)}&element=${encodeURIComponent(item.element)}`
+                          )
+                        }
+                      >
+                        Collaborer
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </CardContent>
             </Card>
+          </div>
 
-            {/* Quick Actions */}
-            <Card className="shadow-card border-0 bg-gradient-card">
-              <CardHeader>
-                <CardTitle className="text-lg">Actions Rapides</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button variant="outline" className="w-full justify-start" size="sm">
-                  <Brain className="w-4 h-4 mr-2" />
-                  Générer Flashcards IA
-                </Button>
-                <Button variant="outline" className="w-full justify-start" size="sm">
-                  <Zap className="w-4 h-4 mr-2" />
-                  QCM Interactif
-                </Button>
-                <Button variant="outline" className="w-full justify-start" size="sm">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Planifier Session
-                </Button>
-                <Button variant="outline" className="w-full justify-start" size="sm">
-                  <Users className="w-4 h-4 mr-2" />
-                  Rejoindre Communauté
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Badges Earned */}
+          {/* Community Highlights (unique to Home) */}
+          <div>
             <Card className="shadow-card border-0 bg-gradient-card">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Trophy className="w-4 h-4" />
-                  Badges Récents
+                  <MessageSquare className="w-4 h-4" />
+                  Community Highlights
                 </CardTitle>
+                <CardDescription>Dernières activités dans votre filière</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex items-center gap-3 p-2 border border-border rounded-lg bg-background/50">
-                  <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                    <Star className="w-4 h-4 text-yellow-600" />
+                {highlights.map((h) => (
+                  <div key={h.id} className="p-2 border border-border rounded-lg bg-background/50">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {h.type === 'resource' && <BookOpen className="w-4 h-4 text-muted-foreground" />}
+                        {h.type === 'session' && <Calendar className="w-4 h-4 text-muted-foreground" />}
+                        {h.type === 'thread' && <MessageSquare className="w-4 h-4 text-muted-foreground" />}
+                        {h.type === 'question' && <MessageSquare className="w-4 h-4 text-muted-foreground" />}
+                        {h.type === 'announcement' && <Calendar className="w-4 h-4 text-muted-foreground" />}
+                        <div>
+                          <div className="text-sm font-medium">{h.title}</div>
+                          {h.subtitle && (
+                            <div className="text-xs text-muted-foreground">{h.subtitle}</div>
+                          )}
+                        </div>
+                      </div>
+                      {h.channel && <Badge variant="outline" className="text-xs">#{h.channel}</Badge>}
+                    </div>
+                    <div className="mt-2 flex items-center justify-between">
+                      <div className="text-xs text-muted-foreground">{h.time}</div>
+                      <div className="flex gap-2">
+                        {h.actions.map((a, idx) => (
+                          <Button key={idx} size="sm" variant={a.variant ?? 'default'} onClick={() => navigate(a.to)}>
+                            {a.label}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-sm font-medium">Expert IA</div>
-                    <div className="text-xs text-muted-foreground">50 Lassqat IA consultés</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-2 border border-border rounded-lg bg-background/50">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Users className="w-4 h-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium">Collaborateur</div>
-                    <div className="text-xs text-muted-foreground">5 sessions organisées</div>
-                  </div>
-                </div>
+                ))}
+                {highlights.length === 0 && (
+                  <div className="text-xs text-muted-foreground">Aucune activité récente.</div>
+                )}
               </CardContent>
             </Card>
           </div>
-        </div>
+  </div>
       </main>
     </div>
   );

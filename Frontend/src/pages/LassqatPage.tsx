@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,7 +31,29 @@ const LassqatPage = () => {
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const [selectedMajor, setSelectedMajor] = useState<string | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
+  const [selectedSemester, setSelectedSemester] = useState<string | null>(null); // S1..S4
+  const [selectedPeriod, setSelectedPeriod] = useState<string | null>(null); // P1, P2
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
+  const [rememberedLevel, setRememberedLevel] = useState<'1A' | '2A' | '3A' | null>(null);
+  const navigate = useNavigate();
+
+  // Persist and restore last chosen level (1A/2A/3A)
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('lassqat.level');
+      if (saved === '1A' || saved === '2A' || saved === '3A') {
+        setRememberedLevel(saved);
+      }
+    } catch {}
+  }, []);
+
+  const chooseLevel = (lvl: '1A' | '2A' | '3A') => {
+    setSelectedLevel(lvl);
+  setSelectedSemester(null);
+  setSelectedPeriod(null);
+    setRememberedLevel(lvl);
+    try { localStorage.setItem('lassqat.level', lvl); } catch {}
+  };
 
   const promotionYears = [
     { year: '2025', studentCount: 450, status: 'active' },
@@ -38,6 +61,7 @@ const LassqatPage = () => {
     { year: '2027', studentCount: 380, status: 'active' },
     { year: '2024', studentCount: 350, status: 'graduated' }
   ];
+  const orderedPromotionYears = [...promotionYears].sort((a, b) => Number(a.year) - Number(b.year));
 
   const majors = [
     { code: 'GL', name: 'Génie Logiciel', icon: Code, color: 'blue', studentCount: 120 },
@@ -128,6 +152,32 @@ const LassqatPage = () => {
     ]
   };
 
+  // Semesters available per level
+  const semestersByLevel: Record<'1A' | '2A' | '3A', string[]> = {
+    '1A': ['S1', 'S2'],
+    '2A': ['S3', 'S4'],
+    '3A': ['S5'],
+  };
+  // Periods are P1 and P2 for any semester
+  const periods = ['P1', 'P2'];
+
+  // Compute modules for a given level/semester/period
+  const getPeriodModules = (lvl: '1A' | '2A' | '3A', sem: string, per: string) => {
+    const all = modules[lvl as keyof typeof modules] || [];
+    // Assign semesters to sample data (demo mapping)
+    let semModules = [] as typeof all;
+    if (lvl === '1A') {
+      semModules = sem === 'S1' ? all : [];
+    } else if (lvl === '2A') {
+      semModules = sem === 'S3' ? all : [];
+    } else if (lvl === '3A') {
+      semModules = sem === 'S5' ? all : [];
+    }
+    const mid = Math.ceil(semModules.length / 2);
+    if (per === 'P1') return semModules.slice(0, mid);
+    return semModules.slice(mid);
+  };
+
   const getColorClasses = (color: string) => {
     const colorMap = {
       blue: 'bg-blue-100 text-blue-800 border-blue-200',
@@ -145,21 +195,36 @@ const LassqatPage = () => {
     setSelectedYear(null);
     setSelectedMajor(null);
     setSelectedLevel(null);
+  setSelectedSemester(null);
+  setSelectedPeriod(null);
     setSelectedModule(null);
   };
 
   const resetToMajors = () => {
     setSelectedMajor(null);
     setSelectedLevel(null);
+  setSelectedSemester(null);
+  setSelectedPeriod(null);
     setSelectedModule(null);
   };
 
   const resetToLevels = () => {
     setSelectedLevel(null);
+  setSelectedSemester(null);
+  setSelectedPeriod(null);
     setSelectedModule(null);
   };
 
   const resetToModules = () => {
+    setSelectedModule(null);
+  };
+  const resetToSemesters = () => {
+    setSelectedSemester(null);
+    setSelectedPeriod(null);
+    setSelectedModule(null);
+  };
+  const resetToPeriods = () => {
+    setSelectedPeriod(null);
     setSelectedModule(null);
   };
 
@@ -181,7 +246,11 @@ const LassqatPage = () => {
                 {majors.find(m => m.code === selectedMajor)?.code}
               </button>
               <ChevronRight className="w-4 h-4" />
-              <button onClick={resetToModules} className="hover:text-foreground">{selectedLevel}</button>
+              <button onClick={resetToSemesters} className="hover:text-foreground">{selectedLevel}</button>
+              <ChevronRight className="w-4 h-4" />
+              <button onClick={resetToPeriods} className="hover:text-foreground">{selectedSemester}</button>
+              <ChevronRight className="w-4 h-4" />
+              <button onClick={resetToModules} className="hover:text-foreground">{selectedPeriod}</button>
               <ChevronRight className="w-4 h-4" />
               <span className="text-foreground font-medium">{module.name}</span>
             </div>
@@ -221,66 +290,36 @@ const LassqatPage = () => {
               </CardHeader>
             </Card>
 
-            {/* Elements */}
-            <div className="grid gap-6">
+            {/* Elements - Minimal cards that navigate to full details */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {module.elements.map((element, index) => (
-                <Card key={index} className="shadow-card hover:shadow-hover transition-all duration-200 bg-background/80">
-                  <CardHeader>
-                    <CardTitle className="text-lg">{element}</CardTitle>
-                    <CardDescription>Éléments de module disponibles avec Lassqat et outils IA</CardDescription>
+                <Card
+                  key={index}
+                  className="shadow-card hover:shadow-hover transition-all duration-200 bg-background/80 cursor-pointer"
+                  onClick={() =>
+                    navigate(
+                      `/element/${selectedYear}/${selectedMajor}/${selectedLevel}/${encodeURIComponent(module.name)}/${encodeURIComponent(element)}`,
+                    )
+                  }
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${getColorClasses(module.color)}`}>
+                          <FileText className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg">{element}</CardTitle>
+                          <CardDescription className="text-sm">Voir les détails et les Lassqat</CardDescription>
+                        </div>
+                      </div>
+                    </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="grid md:grid-cols-2 gap-6">
-                      {/* Lassqat disponibles */}
-                      <div>
-                        <h4 className="font-medium mb-3 flex items-center gap-2">
-                          <FileText className="w-4 h-4 text-primary" />
-                          Lassqat Disponibles
-                        </h4>
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between p-3 border border-border rounded-lg bg-background/50">
-                            <div className="flex items-center gap-2">
-                              <FileText className="w-4 h-4 text-muted-foreground" />
-                              <span className="text-sm">Résumé - {element}</span>
-                            </div>
-                            <Button size="sm" variant="outline">Voir</Button>
-                          </div>
-                          <div className="flex items-center justify-between p-3 border border-border rounded-lg bg-background/50">
-                            <div className="flex items-center gap-2">
-                              <Video className="w-4 h-4 text-muted-foreground" />
-                              <span className="text-sm">Session Enregistrée</span>
-                            </div>
-                            <Button size="sm" variant="outline">Regarder</Button>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Outils IA */}
-                      <div>
-                        <h4 className="font-medium mb-3 flex items-center gap-2">
-                          <Brain className="w-4 h-4 text-primary" />
-                          Outils IA
-                        </h4>
-                        <div className="space-y-2">
-                          <Button variant="outline" className="w-full justify-start" size="sm">
-                            <Zap className="w-4 h-4 mr-2 text-yellow-500" />
-                            Générer des Flashcards
-                          </Button>
-                          <Button variant="outline" className="w-full justify-start" size="sm">
-                            <Award className="w-4 h-4 mr-2 text-green-500" />
-                            Pratiquer QCM/Q&A
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Upload section */}
-                    <div className="mt-6 pt-4 border-t border-border">
-                      <Button variant="default" className="w-full">
-                        <Upload className="w-4 h-4 mr-2" />
-                        Uploader un Lassqa pour {element}
-                      </Button>
-                    </div>
+                  <CardContent className="pt-0">
+                    <Button size="sm" className="w-full">
+                      Voir les Détails
+                      <ChevronRight className="w-4 h-4 ml-1" />
+                    </Button>
                   </CardContent>
                 </Card>
               ))}
@@ -292,8 +331,168 @@ const LassqatPage = () => {
   }
 
   if (selectedLevel && selectedMajor && selectedYear) {
-    const levelModules = modules[selectedLevel as keyof typeof modules] || [];
-    
+    // If semester and period are chosen, show modules for that period
+    if (selectedSemester && selectedPeriod) {
+      const level = selectedLevel as '1A' | '2A' | '3A';
+      const levelModules = getPeriodModules(level, selectedSemester, selectedPeriod);
+      return (
+        <div className="min-h-screen bg-background">
+          <Navigation />
+          
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {/* Breadcrumb */}
+            <div className="flex items-center gap-2 mb-6 text-sm text-muted-foreground">
+              <button onClick={resetToYears} className="hover:text-foreground">Années</button>
+              <ChevronRight className="w-4 h-4" />
+              <button onClick={resetToMajors} className="hover:text-foreground">{selectedYear}</button>
+              <ChevronRight className="w-4 h-4" />
+              <button onClick={resetToLevels} className="hover:text-foreground">
+                {majors.find(m => m.code === selectedMajor)?.code}
+              </button>
+              <ChevronRight className="w-4 h-4" />
+              <button onClick={resetToSemesters} className="hover:text-foreground">{selectedLevel}</button>
+              <ChevronRight className="w-4 h-4" />
+              <button onClick={resetToPeriods} className="hover:text-foreground">{selectedSemester}</button>
+              <ChevronRight className="w-4 h-4" />
+              <span className="text-foreground font-medium">{selectedPeriod}</span>
+            </div>
+
+            {/* Header */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold text-foreground mb-2">
+                    Modules — {selectedLevel} • {selectedSemester} • {selectedPeriod}
+                  </h1>
+                  <p className="text-muted-foreground">
+                    {majors.find(m => m.code === selectedMajor)?.name} — Promotion {selectedYear}
+                  </p>
+                </div>
+                <Button onClick={resetToPeriods} variant="outline">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Retour
+                </Button>
+              </div>
+            </div>
+
+            {/* Modules Grid */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {levelModules.map((module) => (
+                <Card 
+                  key={module.id} 
+                  className="shadow-card hover:shadow-hover transition-all duration-200 bg-background/80 cursor-pointer"
+                  onClick={() => setSelectedModule(module.id.toString())}
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${getColorClasses(module.color)}`}>
+                          <module.icon className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg">{module.name}</CardTitle>
+                          <Badge variant="outline" className="text-xs mt-1">{module.code}</Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="mb-4">
+                      <h4 className="text-sm font-medium text-muted-foreground mb-2">Éléments:</h4>
+                      <div className="flex flex-wrap gap-1">
+                        {module.elements.slice(0, 2).map((element, index) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {element}
+                          </Badge>
+                        ))}
+                        {module.elements.length > 2 && (
+                          <Badge variant="secondary" className="text-xs">
+                            {`+${module.elements.length - 2} plus`}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">{module.lassqatCount} Lassqat</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">{module.studentsCount} Étudiants</span>
+                      </div>
+                    </div>
+
+                    <Button size="sm" className="w-full">
+                      Explorer le Module
+                      <ChevronRight className="w-4 h-4 ml-1" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    // If only level chosen so far, show semesters for that level
+    if (selectedSemester && !selectedPeriod) {
+      const level = selectedLevel as '1A' | '2A' | '3A';
+      const sems = semestersByLevel[level];
+      return (
+        <div className="min-h-screen bg-background">
+          <Navigation />
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {/* Breadcrumb */}
+            <div className="flex items-center gap-2 mb-6 text-sm text-muted-foreground">
+              <button onClick={resetToYears} className="hover:text-foreground">Années</button>
+              <ChevronRight className="w-4 h-4" />
+              <button onClick={resetToMajors} className="hover:text-foreground">{selectedYear}</button>
+              <ChevronRight className="w-4 h-4" />
+              <button onClick={resetToLevels} className="hover:text-foreground">
+                {majors.find(m => m.code === selectedMajor)?.code}
+              </button>
+              <ChevronRight className="w-4 h-4" />
+              <span className="text-foreground font-medium">{selectedLevel}</span>
+            </div>
+
+            <div className="mb-8">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold text-foreground mb-2">Périodes — {selectedLevel} • {selectedSemester}</h1>
+                  <p className="text-muted-foreground">Choisissez la période</p>
+                </div>
+                <Button onClick={resetToSemesters} variant="outline">
+                  <ArrowLeft className="w-4 h-4 mr-2" /> Retour
+                </Button>
+              </div>
+            </div>
+
+            {/* Periods Grid */}
+            <div className="grid md:grid-cols-2 gap-6">
+              {periods.map((p) => (
+                <Card
+                  key={p}
+                  className="shadow-card hover:shadow-hover transition-all duration-200 bg-gradient-card cursor-pointer"
+                  onClick={() => setSelectedPeriod(p)}
+                >
+                  <CardHeader className="text-center">
+                    <CardTitle className="text-xl">Période {p === 'P1' ? '1' : '2'}</CardTitle>
+                    <CardDescription>{selectedSemester}</CardDescription>
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    // Show semesters list for the selected level
+    const level = selectedLevel as '1A' | '2A' | '3A';
+    const sems = semestersByLevel[level];
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
@@ -305,11 +504,9 @@ const LassqatPage = () => {
             <ChevronRight className="w-4 h-4" />
             <button onClick={resetToMajors} className="hover:text-foreground">{selectedYear}</button>
             <ChevronRight className="w-4 h-4" />
-            <button onClick={resetToLevels} className="hover:text-foreground">
+            <span className="text-foreground font-medium">
               {majors.find(m => m.code === selectedMajor)?.code}
-            </button>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-foreground font-medium">{selectedLevel}</span>
+            </span>
           </div>
 
           {/* Header */}
@@ -317,10 +514,10 @@ const LassqatPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-foreground mb-2">
-                  Modules - {selectedLevel}
+                  Semestres — {majors.find(m => m.code === selectedMajor)?.name}
                 </h1>
                 <p className="text-muted-foreground">
-                  {majors.find(m => m.code === selectedMajor)?.name} - Promotion {selectedYear}
+                  {selectedLevel} — Promotion {selectedYear}
                 </p>
               </div>
               <Button onClick={resetToLevels} variant="outline">
@@ -330,66 +527,26 @@ const LassqatPage = () => {
             </div>
           </div>
 
-          {/* Modules Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {levelModules.map((module) => (
+          {/* Semesters Grid */}
+          <div className="grid md:grid-cols-2 gap-6">
+            {sems.map((s) => (
               <Card 
-                key={module.id} 
-                className="shadow-card hover:shadow-hover transition-all duration-200 bg-background/80 cursor-pointer"
-                onClick={() => setSelectedModule(module.id.toString())}
+                key={s} 
+                className="shadow-card hover:shadow-hover transition-all duration-200 bg-gradient-card cursor-pointer"
+                onClick={() => setSelectedSemester(s)}
               >
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${getColorClasses(module.color)}`}>
-                        <module.icon className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-lg">{module.name}</CardTitle>
-                        <Badge variant="outline" className="text-xs mt-1">{module.code}</Badge>
-                      </div>
-                    </div>
-                  </div>
+                <CardHeader className="text-center">
+                  <GraduationCap className="w-12 h-12 text-primary mx-auto mb-4" />
+                  <CardTitle className="text-xl">Semestre {s}</CardTitle>
+                  <CardDescription>Choisir la période</CardDescription>
                 </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="mb-4">
-                    <h4 className="text-sm font-medium text-muted-foreground mb-2">Éléments:</h4>
-                    <div className="flex flex-wrap gap-1">
-                      {module.elements.slice(0, 2).map((element, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {element}
-                        </Badge>
-                      ))}
-                      {module.elements.length > 2 && (
-                        <Badge variant="secondary" className="text-xs">
-                          +{module.elements.length - 2} plus
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">{module.lassqatCount} Lassqat</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">{module.studentsCount} Étudiants</span>
-                    </div>
-                  </div>
-
-                  <Button size="sm" className="w-full">
-                    Explorer le Module
-                    <ChevronRight className="w-4 h-4 ml-1" />
-                  </Button>
-                </CardContent>
               </Card>
             ))}
           </div>
         </main>
       </div>
     );
+    
   }
 
   if (selectedMajor && selectedYear) {
@@ -433,7 +590,7 @@ const LassqatPage = () => {
               <Card 
                 key={level.level} 
                 className="shadow-card hover:shadow-hover transition-all duration-200 bg-gradient-card cursor-pointer"
-                onClick={() => setSelectedLevel(level.level)}
+                onClick={() => chooseLevel(level.level as '1A' | '2A' | '3A')}
               >
                 <CardHeader className="text-center">
                   <GraduationCap className="w-12 h-12 text-primary mx-auto mb-4" />
@@ -441,10 +598,15 @@ const LassqatPage = () => {
                   <CardDescription>
                     {level.moduleCount} modules disponibles
                   </CardDescription>
+                  {rememberedLevel === level.level && (
+                    <div className="mt-2">
+                      <Badge variant="outline">Sélectionné</Badge>
+                    </div>
+                  )}
                 </CardHeader>
                 <CardContent className="text-center">
                   <Button className="w-full">
-                    Accéder aux Modules
+                    Accéder aux Semestres
                     <ChevronRight className="w-4 h-4 ml-2" />
                   </Button>
                 </CardContent>
@@ -544,7 +706,7 @@ const LassqatPage = () => {
 
         {/* Promotion Years Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {promotionYears.map((year) => (
+          {orderedPromotionYears.map((year) => (
             <Card 
               key={year.year} 
               className="shadow-card hover:shadow-hover transition-all duration-200 bg-gradient-card cursor-pointer"

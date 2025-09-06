@@ -4,11 +4,13 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
+import ElementDetailsPage from "./pages/ElementDetailsPage";
 import Dashboard from "./pages/Dashboard";
 import LassqatPage from "./pages/LassqatPage";
 import LassqatPlanningPage from "./pages/LassqatPlanningPage";
 import CommunityPage from "./pages/CommunityPage";
 import NotFound from "./pages/NotFound";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -24,7 +26,8 @@ const App = () => (
           <Route path="/lassqat" element={<LassqatPage />} />
           <Route path="/lassqat-planning" element={<LassqatPlanningPage />} />
           <Route path="/community" element={<CommunityPage />} />
-          <Route path="/profile" element={<Dashboard />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/element/:year/:major/:level/:module/:element" element={<ElementDetailsPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
