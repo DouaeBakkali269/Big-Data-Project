@@ -5,7 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
-import ModulesPage from "./pages/ModulesPage";
+import LassqatPage from "./pages/LassqatPage";
+import LassqatPlanningPage from "./pages/LassqatPlanningPage";
+import CommunityPage from "./pages/CommunityPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -19,10 +21,9 @@ const App = () => (
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/modules" element={<ModulesPage />} />
-          <Route path="/my-lassqat" element={<Dashboard />} />
-          <Route path="/exams" element={<Dashboard />} />
-          <Route path="/community" element={<Dashboard />} />
+          <Route path="/lassqat" element={<LassqatPage />} />
+          <Route path="/lassqat-planning" element={<LassqatPlanningPage />} />
+          <Route path="/community" element={<CommunityPage />} />
           <Route path="/profile" element={<Dashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

@@ -19,9 +19,8 @@ const Navigation = () => {
 
   const navItems = [
     { name: 'Home', path: '/dashboard', icon: Home },
-    { name: 'Modules', path: '/modules', icon: BookOpen },
-    { name: 'My Lassqat', path: '/my-lassqat', icon: FileText },
-    { name: 'Exams', path: '/exams', icon: GraduationCap },
+    { name: 'Lassqat', path: '/lassqat', icon: BookOpen },
+    { name: 'Lassqat Planning', path: '/lassqat-planning', icon: FileText },
     { name: 'Community', path: '/community', icon: Users },
     { name: 'Profile', path: '/profile', icon: User },
   ];
@@ -45,7 +44,7 @@ const Navigation = () => {
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input 
-                placeholder="Search Lassqat, Exams, or Modules..."
+                placeholder="Search Lassqat, Modules, or Exams..."
                 className="pl-10 w-full"
               />
             </div>
@@ -90,7 +89,7 @@ const Navigation = () => {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input 
-                  placeholder="Search Lassqat, Exams, or Modules..."
+                  placeholder="Search Lassqat, Modules, or Exams..."
                   className="pl-10 w-full"
                 />
               </div>

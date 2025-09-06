@@ -12,7 +12,12 @@ import {
   Users,
   ArrowRight,
   Calendar,
-  Award
+  Award,
+  Brain,
+  Zap,
+  Target,
+  Trophy,
+  Plus
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -71,10 +76,10 @@ const Dashboard = () => {
   ];
 
   const quickStats = [
-    { label: 'Lassqat Downloaded', value: '24', icon: FileText, change: '+3' },
-    { label: 'Study Hours', value: '42h', icon: Clock, change: '+5h' },
-    { label: 'Community Points', value: '156', icon: Award, change: '+12' },
-    { label: 'Modules Covered', value: '8/12', icon: BookOpen, change: '+1' }
+    { label: 'XP Gagné', value: '1,245', icon: Trophy, change: '+45' },
+    { label: 'Lassqat Téléchargés', value: '24', icon: FileText, change: '+3' },
+    { label: 'Heures d\'étude', value: '42h', icon: Clock, change: '+5h' },
+    { label: 'Modules Couverts', value: '8/12', icon: Target, change: '+1' }
   ];
 
   return (
@@ -84,12 +89,31 @@ const Dashboard = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            Welcome back, Student! 👋
-          </h1>
-          <p className="text-muted-foreground">
-            Your exam preparation dashboard. Stay organized and ace your ENSIAS exams.
-          </p>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground mb-2">
+                Bienvenue, Ahmed! 👋
+              </h1>
+              <p className="text-muted-foreground">
+                Votre tableau de bord de préparation aux examens ENSIAS. Restez organisé et excellez dans vos études.
+              </p>
+            </div>
+            {/* Gamification Progress */}
+            <div className="bg-gradient-card rounded-xl p-4 border border-border shadow-card">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center">
+                  <Trophy className="w-6 h-6 text-primary-foreground" />
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground">Niveau 7</div>
+                  <div className="text-lg font-bold text-foreground">1,245 XP</div>
+                  <div className="w-24 bg-muted rounded-full h-2 mt-1">
+                    <div className="bg-primary h-2 rounded-full w-3/4"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Quick Stats */}
@@ -206,21 +230,55 @@ const Dashboard = () => {
             {/* Quick Actions */}
             <Card className="shadow-card border-0 bg-gradient-card">
               <CardHeader>
-                <CardTitle className="text-lg">Quick Actions</CardTitle>
+                <CardTitle className="text-lg">Actions Rapides</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button variant="outline" className="w-full justify-start" size="sm">
-                  <Video className="w-4 h-4 mr-2" />
-                  Join Live Session
+                  <Brain className="w-4 h-4 mr-2" />
+                  Générer Flashcards IA
                 </Button>
                 <Button variant="outline" className="w-full justify-start" size="sm">
-                  <FileText className="w-4 h-4 mr-2" />
-                  Upload Lassqa
+                  <Zap className="w-4 h-4 mr-2" />
+                  QCM Interactif
+                </Button>
+                <Button variant="outline" className="w-full justify-start" size="sm">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Planifier Session
                 </Button>
                 <Button variant="outline" className="w-full justify-start" size="sm">
                   <Users className="w-4 h-4 mr-2" />
-                  Ask Community
+                  Rejoindre Communauté
                 </Button>
+              </CardContent>
+            </Card>
+
+            {/* Badges Earned */}
+            <Card className="shadow-card border-0 bg-gradient-card">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Trophy className="w-4 h-4" />
+                  Badges Récents
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-3 p-2 border border-border rounded-lg bg-background/50">
+                  <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <Star className="w-4 h-4 text-yellow-600" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium">Expert IA</div>
+                    <div className="text-xs text-muted-foreground">50 Lassqat IA consultés</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-2 border border-border rounded-lg bg-background/50">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Users className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium">Collaborateur</div>
+                    <div className="text-xs text-muted-foreground">5 sessions organisées</div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>

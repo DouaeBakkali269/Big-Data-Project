@@ -79,7 +79,7 @@ const LandingPage = () => {
                   <span className="text-primary-foreground/90">ENSIAS exams</span>
                 </h1>
                 <p className="text-lg md:text-xl text-primary-foreground/80 mb-8 leading-relaxed">
-                  Access quality Lassqat, collaborate with peers, and ace your exams with the most comprehensive study platform for ENSIAS students.
+                  Accédez à des Lassqat de qualité, collaborez avec vos pairs, et excellez dans vos examens avec la plateforme d'étude la plus complète pour les étudiants ENSIAS.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                   <Link to="/dashboard">
