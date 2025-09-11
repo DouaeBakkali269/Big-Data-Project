@@ -10,6 +10,7 @@ import LassqatPage from "./pages/LassqatPage";
 import LassqatPlanningPage from "./pages/LassqatPlanningPage";
 import SessionDetailsPage from "./pages/SessionDetailsPage";
 import CommunityPage from "./pages/CommunityPage";
+import AdminPeriodsPage from "./pages/AdminPeriodsPage";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/lassqat-planning" element={<LassqatPlanningPage />} />
           <Route path="/session/:id" element={<SessionDetailsPage />} />
           <Route path="/community" element={<CommunityPage />} />
+          <Route path="/admin/periods" element={<AdminPeriodsPage />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/element/:year/:major/:level/:module/:element" element={<ElementDetailsPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

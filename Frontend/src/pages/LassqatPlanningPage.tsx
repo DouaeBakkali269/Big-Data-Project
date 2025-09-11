@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser } from '@/lib/user';
+import { loadAcademicPeriods, resolveCurrentPeriod, AcademicPeriod } from '@/config/academicPeriods';
 
 const LassqatPlanningPage = () => {
   type Session = {
@@ -58,19 +59,25 @@ const LassqatPlanningPage = () => {
   const [editSessionId, setEditSessionId] = useState<number | null>(null);
   const { toast } = useToast();
 
-  // Catalog of modules/elements by level (for selection + coverage)
-  const levelCatalog: Record<'1A' | '2A' | '3A', { module: string; elements: string[] }[]> = {
+  // --- Academic Period Handling (config-driven) ----------------------------------
+  const allPeriods: AcademicPeriod[] = loadAcademicPeriods();
+  const currentPeriodObj: AcademicPeriod = resolveCurrentPeriod(new Date(), allPeriods);
+  const currentPeriodId = currentPeriodObj.id;
+
+  // Catalog of modules/elements by level+period (example distribution)
+  interface CatalogModule { module: string; elements: string[]; period: string }
+  const levelCatalog: Record<'1A' | '2A' | '3A', CatalogModule[]> = {
     '1A': [
-      { module: 'Programmation I', elements: ['Bases de Programmation', 'Structures de Contrôle'] },
-      { module: 'Mathématiques', elements: ['Analyse', 'Algèbre'] },
+  { module: 'Programmation I', period: '2025-p1', elements: ['Bases de Programmation', 'Structures de Contrôle'] },
+  { module: 'Mathématiques', period: '2025-p2', elements: ['Analyse', 'Algèbre'] },
     ],
     '2A': [
-      { module: 'Systèmes de Bases de Données', elements: ['Optimisation et Performance', 'Transactions', 'NoSQL'] },
-      { module: 'Algorithmes et Structures de Données', elements: ['Algorithmes de Tri', 'Complexité', 'Structures de Données'] },
+  { module: 'Systèmes de Bases de Données', period: '2025-p1', elements: ['Optimisation et Performance', 'Transactions', 'NoSQL'] },
+  { module: 'Algorithmes et Structures de Données', period: '2025-p2', elements: ['Algorithmes de Tri', 'Complexité', 'Structures de Données'] },
     ],
     '3A': [
-      { module: 'Intelligence Artificielle', elements: ['Machine Learning', 'Réseaux de Neurones', 'NLP'] },
-      { module: 'Réseaux Informatiques', elements: ['TCP/IP et Routage', 'Sécurité des Réseaux'] },
+  { module: 'Intelligence Artificielle', period: '2025-p1', elements: ['Machine Learning', 'Réseaux de Neurones', 'NLP'] },
+  { module: 'Réseaux Informatiques', period: '2025-p2', elements: ['TCP/IP et Routage', 'Sécurité des Réseaux'] },
     ],
   };
 
@@ -190,12 +197,13 @@ const LassqatPlanningPage = () => {
   };
 
   // Derived lists
-  const availableModules = useMemo(() => levelCatalog[selectedLevel] || [], [levelCatalog, selectedLevel]);
+  // Only expose modules of the current academic period
+  const availableModules = useMemo(() => (levelCatalog[selectedLevel] || []).filter(m => m.period === currentPeriodId), [levelCatalog, selectedLevel, currentPeriodId]);
   const elementOptions = useMemo(() => {
-    const modules = levelCatalog[newSession.level];
-    const found = modules?.find(m => m.module === newSession.module);
+  const modules = (levelCatalog[newSession.level] || []).filter(m => m.period === currentPeriodId);
+    const found = modules.find(m => m.module === newSession.module);
     return found ? found.elements : [];
-  }, [levelCatalog, newSession.level, newSession.module]);
+  }, [levelCatalog, newSession.level, newSession.module, currentPeriod]);
   // live clock for countdown
   const [now, setNow] = useState<number>(Date.now());
   useEffect(() => {
@@ -215,17 +223,17 @@ const LassqatPlanningPage = () => {
   // Coverage by element: which elements have volunteers (organizers) vs still need
   const coverage = useMemo(() => {
     const byModule: Record<string, Record<string, boolean>> = {};
-    const modules = levelCatalog[selectedLevel] || [];
+  const modules = (levelCatalog[selectedLevel] || []).filter(m => m.period === currentPeriodId);
     modules.forEach(m => {
       byModule[m.module] = {};
       m.elements.forEach(el => { byModule[m.module][el] = false; });
     });
     filteredUpcoming.forEach(s => {
-      if (!byModule[s.module]) byModule[s.module] = {} as any;
+      if (!byModule[s.module]) return; // ignore sessions outside current period modules
       byModule[s.module][s.element] = true;
     });
     return byModule;
-  }, [levelCatalog, filteredUpcoming, selectedLevel]);
+  }, [levelCatalog, filteredUpcoming, selectedLevel, currentPeriodId]);
 
   const openCreateDialog = () => {
     setNewSession({ title: '', level: selectedLevel, module: '', element: '', date: '', time: '', platform: 'Teams', link: '', description: '' });
@@ -355,11 +363,11 @@ const LassqatPlanningPage = () => {
           </CardContent>
         </Card>
 
-        {/* Coverage by Element */}
+        {/* Coverage by Element (Current Period) */}
         <Card className="shadow-card border-0 bg-gradient-card mb-8">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><BookOpen className="w-5 h-5 text-primary" /> Couverture par Élément ({selectedLevel})</CardTitle>
-            <CardDescription>Éléments ayant des volontaires vs ceux qui ont encore besoin d'un volontaire</CardDescription>
+            <CardTitle className="flex items-center gap-2"><BookOpen className="w-5 h-5 text-primary" /> Couverture ({selectedLevel}) – {currentPeriodObj.label}</CardTitle>
+            <CardDescription>Période active: {currentPeriodObj.start} → {currentPeriodObj.end} – vert = volontaire trouvé, rouge = besoin</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -371,14 +379,20 @@ const LassqatPlanningPage = () => {
                   <CardContent className="pt-0">
                     <div className="flex flex-wrap gap-2">
                       {Object.entries(elements).map(([el, has]) => (
-                        <Badge key={el} variant={has ? 'default' : 'secondary'} className={has ? '' : ''}>
-                          {has ? 'Volontaire trouvé' : 'Besoin de volontaire'} — {el}
-                        </Badge>
+                        <span
+                          key={el}
+                          className={`text-[11px] inline-flex items-center gap-1 px-2 py-1 rounded-md border font-medium tracking-tight ${has ? 'bg-green-500/15 text-green-600 border-green-500/30' : 'bg-red-500/10 text-red-600 border-red-500/30'}`}
+                        >
+                          {has ? 'Volontaire' : 'Besoin'} • {el}
+                        </span>
                       ))}
                     </div>
                   </CardContent>
                 </Card>
               ))}
+              {Object.keys(coverage).length === 0 && (
+                <div className="text-sm text-muted-foreground col-span-full">Aucun module défini pour cette période.</div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -578,7 +592,7 @@ const LassqatPlanningPage = () => {
               <Select value={newSession.module} onValueChange={(v) => setNewSession(s => ({...s, module: v, element: ''}))}>
                 <SelectTrigger className="w-full"><SelectValue placeholder="Choisir un module" /></SelectTrigger>
                 <SelectContent>
-                  {(levelCatalog[newSession.level as '1A' | '2A' | '3A'] || []).map(m => (
+                  {(levelCatalog[newSession.level as '1A' | '2A' | '3A'] || []).filter(m => m.period === currentPeriodId).map(m => (
                     <SelectItem key={m.module} value={m.module}>{m.module}</SelectItem>
                   ))}
                 </SelectContent>
