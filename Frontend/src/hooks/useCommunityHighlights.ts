@@ -38,7 +38,6 @@ export function useCommunityHighlights(): HighlightItem[] {
         time: 'il y a 1h',
         actions: [
           { label: 'Ouvrir', to: `/element/2025/${user.major}/${user.level}/${encodeURIComponent('Systèmes de BD')}/${encodeURIComponent('Transactions et Verrous')}` },
-          { label: 'Collaborer', to: `/lassqat-planning?level=${encodeURIComponent(user.level)}&module=${encodeURIComponent('Systèmes de BD')}&element=${encodeURIComponent('Transactions et Verrous')}`, variant: 'outline' },
         ],
       },
       {

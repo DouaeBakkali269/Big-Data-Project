@@ -2,7 +2,7 @@ import Navigation from '@/components/Navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, Clock, FileText, Calendar, Target, Trophy, MessageSquare } from 'lucide-react';
+import { BookOpen, FileText, Calendar, Target, Trophy, MessageSquare } from 'lucide-react';
 import { getCurrentUser } from '@/lib/user';
 import { useNavigate } from 'react-router-dom';
 import useCommunityHighlights from '@/hooks/useCommunityHighlights';
@@ -45,13 +45,13 @@ const Dashboard = () => {
   ];
   const filteredSubscribed = subscribedLassqat.filter(i => i.major === user.major && i.level === user.level);
   const highlights = useCommunityHighlights();
-
-  const quickStats = [
-    { label: 'XP Gagné', value: '1,245', icon: Trophy, change: '+45' },
-    { label: 'Lassqat Téléchargés', value: '24', icon: FileText, change: '+3' },
-    { label: 'Heures d\'étude', value: '42h', icon: Clock, change: '+5h' },
-    { label: 'Modules Couverts', value: '8/12', icon: Target, change: '+1' }
-  ];
+  const RECENTS_KEY = 'recentlyViewed';
+  type RecentItem = { id: string; title: string; module: string; element: string; when: string; to: string };
+  let recentItems: RecentItem[] = [];
+  try {
+    const raw = localStorage.getItem(RECENTS_KEY);
+    if (raw) recentItems = JSON.parse(raw);
+  } catch {}
 
   return (
     <div className="min-h-screen bg-background">
@@ -69,17 +69,28 @@ const Dashboard = () => {
                 Votre tableau de bord de préparation aux examens ENSIAS. Restez organisé et excellez dans vos études.
               </p>
             </div>
-            {/* Gamification Progress */}
+            {/* Gamification + Modules Couverts */}
             <div className="bg-gradient-card rounded-xl p-4 border border-border shadow-card">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center">
                   <Trophy className="w-6 h-6 text-primary-foreground" />
                 </div>
-                <div>
+                <div className="min-w-[10rem]">
                   <div className="text-sm text-muted-foreground">Niveau 7</div>
                   <div className="text-lg font-bold text-foreground">1,245 XP</div>
                   <div className="w-24 bg-muted rounded-full h-2 mt-1">
                     <div className="bg-primary h-2 rounded-full w-3/4"></div>
+                  </div>
+                </div>
+                <div className="ml-6 pl-6 border-l border-border">
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center">
+                      <Target className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">Modules Couverts</div>
+                      <div className="text-base font-semibold">8/12</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -87,27 +98,28 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {quickStats.map((stat, index) => (
-            <Card key={index} className="shadow-card hover:shadow-hover transition-all duration-200 bg-gradient-card border-0">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+        {/* Recently Viewed */}
+        <div className="mb-8">
+          <Card className="shadow-card border-0 bg-gradient-card">
+            <CardHeader>
+              <CardTitle className="text-lg">Recently Viewed</CardTitle>
+              <CardDescription>Vos derniers éléments consultés</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {recentItems.length === 0 && (
+                <div className="text-sm text-muted-foreground">Aucun élément vu récemment.</div>
+              )}
+              {recentItems.slice(0, 6).map((r) => (
+                <div key={r.id} className="p-3 border border-border rounded-lg bg-background/50 flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">{stat.label}</p>
-                    <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                    <div className="flex items-center mt-1">
-                      <span className="text-sm text-green-600">{stat.change}</span>
-                      <span className="text-sm text-muted-foreground ml-1">this week</span>
-                    </div>
+                    <div className="text-sm font-medium">{r.title}</div>
+                    <div className="text-xs text-muted-foreground">{r.module} • {r.element}</div>
                   </div>
-                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                    <stat.icon className="w-6 h-6 text-primary" />
-                  </div>
+                  <Button size="sm" variant="outline" onClick={() => navigate(r.to)}>Ouvrir</Button>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+              ))}
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
@@ -150,17 +162,7 @@ const Dashboard = () => {
                       >
                         Ouvrir
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() =>
-                          navigate(
-                            `/lassqat-planning?level=${encodeURIComponent(item.level)}&module=${encodeURIComponent(item.module)}&element=${encodeURIComponent(item.element)}`
-                          )
-                        }
-                      >
-                        Collaborer
-                      </Button>
+                      {/* Collaborer removed */}
                     </div>
                   </div>
                 ))}

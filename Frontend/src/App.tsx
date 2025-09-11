@@ -8,6 +8,7 @@ import ElementDetailsPage from "./pages/ElementDetailsPage";
 import Dashboard from "./pages/Dashboard";
 import LassqatPage from "./pages/LassqatPage";
 import LassqatPlanningPage from "./pages/LassqatPlanningPage";
+import SessionDetailsPage from "./pages/SessionDetailsPage";
 import CommunityPage from "./pages/CommunityPage";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/lassqat" element={<LassqatPage />} />
           <Route path="/lassqat-planning" element={<LassqatPlanningPage />} />
+          <Route path="/session/:id" element={<SessionDetailsPage />} />
           <Route path="/community" element={<CommunityPage />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/element/:year/:major/:level/:module/:element" element={<ElementDetailsPage />} />

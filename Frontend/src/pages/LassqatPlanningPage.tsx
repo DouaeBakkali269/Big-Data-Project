@@ -1,12 +1,11 @@
 import Navigation from '@/components/Navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter } from '@/components/ui/drawer';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -16,12 +15,15 @@ import {
   Plus,
   User,
   BookOpen,
-  Star,
-  MessageSquare,
-  Bell,
   Share2,
-  Upload
+  Upload,
+  FileText,
+  ExternalLink,
+  ArrowRight,
+  Pencil
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { getCurrentUser } from '@/lib/user';
 
 const LassqatPlanningPage = () => {
   type Session = {
@@ -29,29 +31,31 @@ const LassqatPlanningPage = () => {
     title: string;
     organizer: string;
     collaborators: string[];
-    date: string;
-    time: string;
+    date: string; // human
+    time: string; // human
+    startISO: string; // scheduling anchor
     module: string;
     element: string;
     platform: string;
     link: string;
-    attendees: number;
+    description?: string;
+    pdfTitle?: string;
+    pdfUrl?: string;
+    subscribers: string[];
     maxAttendees: number;
-    rating: number;
     status: 'confirmé' | 'planifié' | 'en_preparation' | 'terminé';
     level: '1A' | '2A' | '3A';
     major?: string;
+    year?: string;
   };
   // Simulated current user and default level filter
-  const currentUser = 'Moi';
+  const navigate = useNavigate();
+  const currentUser = getCurrentUser()?.name || 'Moi';
   const [selectedLevel, setSelectedLevel] = useState<'1A' | '2A' | '3A'>('2A');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showUploadDialog, setShowUploadDialog] = useState<{open: boolean; sessionId?: number}>({open: false});
-  const [commentsOpen, setCommentsOpen] = useState(false);
-  const [commentsSession, setCommentsSession] = useState<Session | null>(null);
-  const [newComment, setNewComment] = useState('');
-  const [sessionComments, setSessionComments] = useState<Record<number, { author: string; text: string; date: string }[]>>({});
-  const [notifiedSessions, setNotifiedSessions] = useState<number[]>([]);
+  const [showSubscribersDialog, setShowSubscribersDialog] = useState<{ open: boolean; session?: Session }>({ open: false });
+  const [editSessionId, setEditSessionId] = useState<number | null>(null);
   const { toast } = useToast();
 
   // Catalog of modules/elements by level (for selection + coverage)
@@ -79,6 +83,7 @@ const LassqatPlanningPage = () => {
     time: string; // e.g., 14:00
     platform: string;
     link: string;
+    description: string;
   }>({
     title: '',
     level: '2A',
@@ -87,7 +92,8 @@ const LassqatPlanningPage = () => {
     date: '',
     time: '',
     platform: 'Teams',
-    link: ''
+    link: '',
+    description: ''
   });
 
   const [upcomingSessions, setUpcomingSessions] = useState<Session[]>([
@@ -98,16 +104,19 @@ const LassqatPlanningPage = () => {
       collaborators: ['Sara El Amrani', 'Omar Idrissi'],
       date: 'Dim 8 Déc 2024',
       time: '14:00 - 16:00',
-      module: 'Intelligence Artificielle',
+    module: 'Intelligence Artificielle',
       element: 'Machine Learning',
       platform: 'Teams',
   link: 'https://teams.microsoft.com/l/meetup-join/ai-ml-123',
-      attendees: 23,
       maxAttendees: 30,
-      rating: 4.8,
+    subscribers: ['Sara El Amrani'],
+    description: undefined,
+    pdfTitle: undefined,
+    pdfUrl: undefined,
+    startISO: '2025-09-09T14:00:00',
       status: 'confirmé',
       level: '3A',
-      major: 'IA'
+    major: 'IA'
     },
     {
       id: 2,
@@ -116,13 +125,16 @@ const LassqatPlanningPage = () => {
       collaborators: [],
       date: 'Lun 9 Déc 2024',
       time: '16:30 - 18:30',
-      module: 'Systèmes de Bases de Données',
+    module: 'Systèmes de Bases de Données',
       element: 'Optimisation et Performance',
       platform: 'Zoom',
   link: 'https://zoom.us/j/1234567890',
-      attendees: 18,
       maxAttendees: 25,
-      rating: 4.9,
+    subscribers: ['Mohamed Ali', 'Nisrine O.'],
+    description: undefined,
+    pdfTitle: undefined,
+    pdfUrl: undefined,
+    startISO: '2025-09-10T16:30:00',
       status: 'confirmé',
       level: '2A',
       major: 'GL'
@@ -134,13 +146,16 @@ const LassqatPlanningPage = () => {
       collaborators: ['Aicha Benali'],
       date: 'Mar 10 Déc 2024',
       time: '19:00 - 21:00',
-      module: 'Réseaux Informatiques',
+    module: 'Réseaux Informatiques',
       element: 'TCP/IP et Routage',
       platform: 'Google Meet',
   link: 'https://meet.google.com/abcd-efgh-ijk',
-      attendees: 15,
       maxAttendees: 20,
-      rating: 4.7,
+    subscribers: ['User X', 'User Y', 'User Z'],
+    description: undefined,
+    pdfTitle: undefined,
+    pdfUrl: undefined,
+    startISO: '2025-09-11T19:00:00',
       status: 'planifié',
       level: '2A',
       major: 'RI'
@@ -157,8 +172,10 @@ const LassqatPlanningPage = () => {
       element: 'Algorithmes de Tri',
       status: 'en_preparation',
       registrations: 12,
-  collaboratorRequests: 3,
-  link: ''
+      collaboratorRequests: 3,
+      link: '',
+      startISO: '2025-09-12T15:00:00',
+      organizer: currentUser
     }
   ]);
 
@@ -179,7 +196,21 @@ const LassqatPlanningPage = () => {
     const found = modules?.find(m => m.module === newSession.module);
     return found ? found.elements : [];
   }, [levelCatalog, newSession.level, newSession.module]);
-  const filteredUpcoming = useMemo(() => upcomingSessions.filter(s => s.level === selectedLevel), [upcomingSessions, selectedLevel]);
+  // live clock for countdown
+  const [now, setNow] = useState<number>(Date.now());
+  useEffect(() => {
+    const i = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(i);
+  }, []);
+  const minutesUntil = (iso: string) => Math.ceil((new Date(iso).getTime() - now) / 60000);
+  const isExpired = (iso: string) => now > new Date(iso).getTime() + 30 * 60000;
+
+  const filteredUpcoming = useMemo(() => 
+    upcomingSessions
+      .filter(s => s.level === selectedLevel)
+      .filter(s => !isExpired(s.startISO))
+      .sort((a,b) => new Date(a.startISO).getTime() - new Date(b.startISO).getTime())
+  , [upcomingSessions, selectedLevel, now]);
 
   // Coverage by element: which elements have volunteers (organizers) vs still need
   const coverage = useMemo(() => {
@@ -197,7 +228,7 @@ const LassqatPlanningPage = () => {
   }, [levelCatalog, filteredUpcoming, selectedLevel]);
 
   const openCreateDialog = () => {
-    setNewSession({ title: '', level: selectedLevel, module: '', element: '', date: '', time: '', platform: 'Teams', link: '' });
+    setNewSession({ title: '', level: selectedLevel, module: '', element: '', date: '', time: '', platform: 'Teams', link: '', description: '' });
     setShowCreateDialog(true);
   };
 
@@ -213,19 +244,23 @@ const LassqatPlanningPage = () => {
       collaborators: [] as string[],
       date: humanDate,
       time: timeRange,
+      startISO: `${newSession.date}T${newSession.time}:00`,
       module: newSession.module,
       element: newSession.element,
       platform: newSession.platform,
       link: newSession.link,
-      attendees: 0,
+      description: newSession.description,
+      pdfTitle: undefined,
+      pdfUrl: undefined,
+      subscribers: [],
       maxAttendees: 30,
-      rating: 0,
       status: 'planifié',
       level: newSession.level,
-      major: '-'
+      major: '-',
+      year: '2025'
     };
     setUpcomingSessions(prev => [created, ...prev]);
-    setMyPlannedSessions(prev => [{ id, title: created.title, date: created.date, time: created.time, module: created.module, element: created.element, status: 'en_preparation', registrations: 0, collaboratorRequests: 0, link: created.link }, ...prev]);
+  setMyPlannedSessions(prev => [{ id, title: created.title, date: created.date, time: created.time, module: created.module, element: created.element, status: 'en_preparation', registrations: 0, collaboratorRequests: 0, link: created.link, startISO: created.startISO, organizer: currentUser }, ...prev]);
     setShowCreateDialog(false);
   };
 
@@ -262,35 +297,12 @@ const LassqatPlanningPage = () => {
     toast({ title: 'Lien enregistré', description: 'Le lien de la réunion a été ajouté à la session.' });
   };
 
-  const openComments = (session: Session) => {
-    setCommentsSession(session);
-    setCommentsOpen(true);
-  };
-
-  const publishComment = () => {
-    if (!commentsSession || !newComment.trim()) return;
-    const sid = commentsSession.id;
-    setSessionComments(prev => ({
-      ...prev,
-      [sid]: [
-        { author: currentUser, text: newComment.trim(), date: new Date().toLocaleString('fr-FR') },
-        ...(prev[sid] || []),
-      ],
-    }));
-    setNewComment('');
-    toast({ title: 'Commentaire publié', description: `Votre message a été ajouté à "${commentsSession.title}".` });
-  };
-
-  const toggleNotify = (session: Session) => {
-    setNotifiedSessions(prev => {
-      const isOn = prev.includes(session.id);
-      const next = isOn ? prev.filter(id => id !== session.id) : [session.id, ...prev];
-      toast({
-        title: isOn ? 'Notifications désactivées' : 'Notifications activées',
-        description: `${isOn ? 'Vous ne recevrez plus' : 'Vous recevrez'} des rappels pour "${session.title}".`,
-      });
-      return next;
-    });
+  const toggleSubscribe = (id: number) => {
+    setUpcomingSessions(prev => prev.map(s => s.id === id ? (
+      s.subscribers.includes(currentUser)
+        ? { ...s, subscribers: s.subscribers.filter(u => u !== currentUser) }
+        : { ...s, subscribers: [...s.subscribers, currentUser] }
+    ) : s));
   };
 
   return (
@@ -380,78 +392,69 @@ const LassqatPlanningPage = () => {
                   <Calendar className="w-5 h-5 text-primary" />
                   Sessions à Venir
                 </CardTitle>
-                <CardDescription>
-                  Sessions planifiées par la communauté
-                </CardDescription>
+                <CardDescription>Informations minimales — cliquez sur Détails</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {filteredUpcoming.map((session) => (
                   <div key={session.id} className="border border-border rounded-lg p-4 hover:shadow-academic transition-all duration-200 bg-background/50">
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-foreground mb-2">{session.title}</h3>
-                        <div className="flex flex-wrap items-center gap-2 mb-3">
-                          <Badge variant="outline">{session.level}</Badge>
-                          <Badge className={getStatusColor(session.status)}>
-                            {session.status}
-                          </Badge>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground mb-3">
-                          <div className="flex items-center gap-2">
-                            <User className="w-4 h-4" />
-                            <span>Par {session.organizer}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4" />
-                            <span>{session.date}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Clock className="w-4 h-4" />
-                            <span>{session.time}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Video className="w-4 h-4" />
-                            <span>{session.platform}</span>
-                          </div>
-                        </div>
-                        {session.collaborators.length > 0 && (
-                          <div className="mb-3">
-                            <p className="text-sm text-muted-foreground mb-1">Collaborateurs:</p>
-                            <div className="flex gap-1">
-                              {session.collaborators.map((collab, index) => (
-                                <Badge key={index} variant="secondary" className="text-xs">
-                                  {collab}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant="outline">{session.level}</Badge>
+                        <Badge className={getStatusColor(session.status)}>{session.status}</Badge>
+                        <span className="text-sm text-foreground font-medium">{session.module} — {session.element}</span>
                       </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                          <span className="text-sm font-medium">{session.rating}</span>
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {session.attendees}/{session.maxAttendees} participants
-                        </div>
+                      <div className="text-xs text-muted-foreground flex items-center gap-2">
+                        <User className="w-4 h-4" /> Par {session.organizer}
+                        <span>•</span>
+                        <Calendar className="w-4 h-4" /> {session.date}
+                        <span>•</span>
+                        <Clock className="w-4 h-4" /> {session.time}
                       </div>
                     </div>
-                    
-                    <div className="flex gap-2">
-                      <Button size="sm" className="px-3">S'inscrire</Button>
-                      <Button size="sm" variant="outline" onClick={() => handleCollaborate(session.id)}>Collaborer</Button>
-                      <Button size="sm" variant="outline" onClick={() => openComments(session)} aria-label="Commentaires">
-                        <MessageSquare className="w-4 h-4" />
+
+                    {(session.description || session.link) && (
+                      <div className="text-sm text-muted-foreground mb-3">
+                        {session.description && <p className="mb-1">{session.description}</p>}
+                        {session.link && (
+                          <a className="inline-flex items-center gap-1 text-primary hover:underline" href={session.link} target="_blank" rel="noreferrer">
+                            Lien de la réunion
+                          </a>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap items-center gap-3 mb-3">
+                      {session.pdfUrl && (
+                        <a href={session.pdfUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs border border-border rounded px-2 py-1">
+                          <FileText className="w-4 h-4" /> {session.pdfTitle || 'Lassqa PDF'}
+                        </a>
+                      )}
+                      <Button size="sm" variant="secondary" onClick={() => navigate(`/element/${session.year || '2025'}/${session.major || 'GL'}/${session.level}/${encodeURIComponent(session.module)}/${encodeURIComponent(session.element)}`)}>
+                        Ouvrir l’élément <ArrowRight className="w-4 h-4 ml-1" />
                       </Button>
-                      <Button
-                        size="sm"
-                        variant={notifiedSessions.includes(session.id) ? 'default' : 'outline'}
-                        onClick={() => toggleNotify(session)}
-                        aria-label="Notifications"
-                      >
-                        <Bell className="w-4 h-4" />
-                      </Button>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Button size="sm" className="px-3" onClick={() => toggleSubscribe(session.id)}>
+                          {session.subscribers.includes(currentUser) ? "Se désinscrire" : "S'inscrire"}
+                        </Button>
+                        <span className="text-xs text-muted-foreground">{session.subscribers.length}/{session.maxAttendees} inscrits</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="text-xs text-muted-foreground">
+                          {(() => {
+                            const m = minutesUntil(session.startISO);
+                            if (m <= 0 && !isExpired(session.startISO)) return 'En cours';
+                            if (m > 0) {
+                              const h = Math.floor(m / 60); const mm = m % 60;
+                              return `Commence dans ${h > 0 ? h + 'h ' : ''}${mm}m`;
+                            }
+                            return '';
+                          })()}
+                        </div>
+                        <Button size="sm" variant="outline" onClick={() => navigate(`/session/${session.id}`, { state: session })}>Détails</Button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -468,7 +471,10 @@ const LassqatPlanningPage = () => {
                 <CardDescription>Sessions que vous organisez</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {myPlannedSessions.map((session) => (
+                {myPlannedSessions
+                  .filter(session => session.organizer === currentUser)
+                  .filter(session => !isExpired(session.startISO))
+                  .map((session) => (
                   <div key={session.id} className="border border-border rounded-lg p-3 bg-background/50">
                     <h4 className="font-medium text-foreground text-sm mb-2">{session.title}</h4>
                     <div className="text-xs text-muted-foreground mb-2">
@@ -481,29 +487,58 @@ const LassqatPlanningPage = () => {
                         <span>{session.time}</span>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center mb-1">
-                      <Badge className={getStatusColor(session.status)} variant="outline">
-                        {session.status}
-                      </Badge>
-                      <div className="text-xs text-muted-foreground">
-                        {session.registrations} inscrits
-                      </div>
+                    <div className="flex justify-end items-center mb-1">
+                      <div className="text-xs text-muted-foreground">{session.registrations} inscrits</div>
                     </div>
-                    {session.link && (
-                      <div className="text-[11px] text-emerald-700 flex items-center gap-1 mb-2">
-                        <Share2 className="w-3 h-3" /> Lien enregistré
-                      </div>
-                    )}
-                    <div className="flex gap-2">
-                      {!session.link && (
-                        <Button size="sm" variant="outline" className="w-1/2 text-xs" onClick={() => openShareLinkDialog(session.id, session.link)}>
-                          <Share2 className="w-3 h-3 mr-1" />
-                          Partager le lien
-                        </Button>
+                    <div className="mb-2">
+                      {session.link ? (
+                        <div className="flex items-center gap-2">
+                          <a href={session.link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline text-xs">
+                            <ExternalLink className="w-3 h-3" /> Ouvrir la réunion
+                          </a>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-6 px-2 text-[11px]"
+                            onClick={() => { navigator.clipboard?.writeText(session.link); toast({ title: 'Lien copié', description: 'Le lien de la réunion a été copié.' }); }}
+                          >
+                            Copier
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="text-[11px] text-muted-foreground">Lien non ajouté</div>
                       )}
-                      <Button size="sm" className="w-1/2 text-xs" onClick={() => handleUpload(session.id)}>
-                        <Upload className="w-3 h-3 mr-1" />
-                        Uploader
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        className="w-full text-xs"
+                        variant="secondary"
+                        onClick={() => {
+                          const full = upcomingSessions.find(s => s.id === session.id);
+                          const fallback = full || {
+                            id: session.id,
+                            title: session.title,
+                            organizer: currentUser,
+                            date: session.date,
+                            time: session.time,
+                            startISO: session.startISO,
+                            module: session.module,
+                            element: session.element,
+                            platform: 'Teams',
+                            link: session.link,
+                            description: undefined,
+                            pdfTitle: undefined,
+                            pdfUrl: undefined,
+                            subscribers: [],
+                            maxAttendees: 0,
+                            status: session.status as any,
+                            level: selectedLevel,
+                          };
+                          navigate(`/session/${session.id}`, { state: fallback });
+                        }}
+                      >
+                        Voir détails
                       </Button>
                     </div>
                   </div>
@@ -511,40 +546,29 @@ const LassqatPlanningPage = () => {
               </CardContent>
             </Card>
 
-            {/* Statistiques */}
-            <Card className="shadow-card border-0 bg-gradient-card">
-              <CardHeader>
-                <CardTitle className="text-lg">Statistiques</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">12</div>
-                  <div className="text-sm text-muted-foreground">Sessions Organisées</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">34</div>
-                  <div className="text-sm text-muted-foreground">Sessions Suivies</div>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Statistiques removed as requested */}
 
-            {/* Rappels */}
+            {/* À venir (bientôt) */}
             <Card className="shadow-card border-0 bg-gradient-card">
               <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Bell className="w-4 h-4" />
-                  Rappels
-                </CardTitle>
+                <CardTitle className="text-lg">À venir (bientôt)</CardTitle>
+                <CardDescription>Prochaines sessions selon votre niveau</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="p-3 border border-border rounded-lg bg-background/50">
-                  <div className="text-sm font-medium">Session dans 2h</div>
-                  <div className="text-xs text-muted-foreground">Machine Learning - 14:00</div>
-                </div>
-                <div className="p-3 border border-border rounded-lg bg-background/50">
-                  <div className="text-sm font-medium">Préparer le contenu</div>
-                  <div className="text-xs text-muted-foreground">Algorithmes de Tri - Demain</div>
-                </div>
+                {filteredUpcoming.slice(0, 2).map(s => (
+                  <div key={s.id} className="p-3 border border-border rounded-lg bg-background/50">
+                    <div className="text-sm font-medium">{s.module} — {s.element}</div>
+                    <div className="text-xs text-muted-foreground flex items-center gap-2">
+                      <Calendar className="w-3 h-3" /> {s.date}
+                      <span>•</span>
+                      <Clock className="w-3 h-3" /> {s.time}
+                      <span className="ml-auto">{(() => { const m = minutesUntil(s.startISO); if (m <= 0 && !isExpired(s.startISO)) return 'En cours'; if (m > 0) { const h = Math.floor(m/60); const mm = m%60; return `${h>0? h+'h ' : ''}${mm}m`; } return ''; })()}</span>
+                    </div>
+                  </div>
+                ))}
+                {filteredUpcoming.length === 0 && (
+                  <div className="text-sm text-muted-foreground">Rien à venir pour {selectedLevel}.</div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -649,42 +673,113 @@ const LassqatPlanningPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Comments Drawer */}
-      <Drawer open={commentsOpen} onOpenChange={setCommentsOpen}>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>Commentaires</DrawerTitle>
-            <DrawerDescription>
-              {commentsSession ? commentsSession.title : 'Session'}
-            </DrawerDescription>
-          </DrawerHeader>
-          <div className="px-6 pb-4 space-y-3 max-h-[50vh] overflow-y-auto">
-            {(commentsSession && sessionComments[commentsSession.id])?.length ? (
-              sessionComments[commentsSession.id].map((c, idx) => (
-                <div key={idx} className="p-3 border border-border rounded-md bg-background/50">
-                  <div className="text-sm font-medium">{c.author}</div>
-                  <div className="text-sm text-muted-foreground">{c.date}</div>
-                  <div className="text-sm mt-2">{c.text}</div>
-                </div>
-              ))
+  {/* Comments removed from Upcoming; to be handled in Session Details or Element tabs */}
+
+  {/* Subscribers Dialog */}
+      <Dialog open={showSubscribersDialog.open} onOpenChange={(open) => setShowSubscribersDialog(s => ({ ...s, open }))}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Inscrits</DialogTitle>
+            <DialogDescription>{showSubscribersDialog.session?.title}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            {(showSubscribersDialog.session?.subscribers || []).length === 0 ? (
+              <div className="text-sm text-muted-foreground">Aucun inscrit pour l’instant.</div>
             ) : (
-              <div className="text-sm text-muted-foreground">Aucun commentaire pour l’instant.</div>
+              <ul className="text-sm list-disc pl-5">
+                {showSubscribersDialog.session!.subscribers.map((u, i) => (
+                  <li key={i}>{u}</li>
+                ))}
+              </ul>
             )}
           </div>
-          <div className="px-6 pb-6">
-            <Textarea
-              placeholder="Écrire un commentaire…"
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              className="mb-3"
-            />
-            <div className="flex justify-end">
-              <Button onClick={publishComment} disabled={!newComment.trim()}>Publier</Button>
-            </div>
-          </div>
-          <DrawerFooter />
-        </DrawerContent>
-      </Drawer>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setShowSubscribersDialog({ open: false })}>Fermer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Session Dialog */}
+      <Dialog open={!!editSessionId} onOpenChange={(open) => setEditSessionId(open ? editSessionId : null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Modifier la Session</DialogTitle>
+            <DialogDescription>Mettre à jour la date/heure, le lien ou la description.</DialogDescription>
+          </DialogHeader>
+          {(() => {
+            const s = upcomingSessions.find(x => x.id === editSessionId) || null;
+            const p = myPlannedSessions.find(x => x.id === editSessionId) || null;
+            if (!s && !p) return <div className="text-sm text-muted-foreground">Aucune session sélectionnée.</div>;
+
+            const startDate = s ? s.startISO.split('T')[0] : '';
+            const timeHHMM = s ? s.startISO.split('T')[1]?.slice(0,5) || '' : (p ? (p.time?.split(' ')[0] || '') : '');
+
+            return (
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm text-muted-foreground">Date</label>
+                    <Input type="date" defaultValue={startDate} onChange={(e) => {
+                      const d = e.target.value; const t = timeHHMM;
+                      if (s) {
+                        setUpcomingSessions(prev => prev.map(x => x.id === s.id ? ({
+                          ...x,
+                          startISO: `${d}T${t || '00:00'}:00`,
+                          date: d && t ? new Date(`${d}T${t}`).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : x.date,
+                          time: t ? `${t} - ${t}` : x.time
+                        }) : x));
+                      } else if (p) {
+                        setMyPlannedSessions(prev => prev.map(x => x.id === p.id ? ({
+                          ...x,
+                          // store ISO date raw for now or keep human-readable string
+                          date: d || x.date
+                        }) : x));
+                      }
+                    }} />
+                  </div>
+                  <div>
+                    <label className="text-sm text-muted-foreground">Heure</label>
+                    <Input type="time" defaultValue={timeHHMM} onChange={(e) => {
+                      const t = e.target.value; const d = startDate;
+                      if (s) {
+                        setUpcomingSessions(prev => prev.map(x => x.id === s.id ? ({
+                          ...x,
+                          startISO: `${d || x.startISO.split('T')[0]}T${t}:00`,
+                          date: (d || x.startISO.split('T')[0]) ? new Date(`${d || x.startISO.split('T')[0]}T${t}`).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : x.date,
+                          time: `${t} - ${t}`
+                        }) : x));
+                      } else if (p) {
+                        setMyPlannedSessions(prev => prev.map(x => x.id === p.id ? ({
+                          ...x,
+                          time: t ? `${t} - ${t}` : x.time
+                        }) : x));
+                      }
+                    }} />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground">Lien</label>
+                  <Input defaultValue={s ? s.link : (p?.link || '')} onChange={(e) => {
+                    const v = e.target.value;
+                    if (s) setUpcomingSessions(prev => prev.map(x => x.id === s.id ? ({ ...x, link: v }) : x));
+                    if (p) setMyPlannedSessions(prev => prev.map(x => x.id === p.id ? ({ ...x, link: v }) : x));
+                  }} />
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground">Description</label>
+                  <Textarea defaultValue={s?.description} onChange={(e) => {
+                    const v = e.target.value;
+                    if (s) setUpcomingSessions(prev => prev.map(x => x.id === s.id ? ({ ...x, description: v }) : x));
+                  }} />
+                </div>
+              </div>
+            );
+          })()}
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setEditSessionId(null)}>Fermer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Share Link Dialog */}
       <Dialog open={shareLinkDialog.open} onOpenChange={(open) => setShareLinkDialog(s => ({ ...s, open }))}>

@@ -34,7 +34,6 @@ const ModulesPage = () => {
           elements: ['Linear Algebra', 'Probability', 'Statistics'],
           lassqatCount: 24,
           examCount: 8,
-          studentsCount: 156,
           rating: 4.7,
           color: 'blue'
         },
@@ -46,7 +45,6 @@ const ModulesPage = () => {
           elements: ['C Programming', 'Algorithms', 'Data Structures'],
           lassqatCount: 31,
           examCount: 12,
-          studentsCount: 189,
           rating: 4.8,
           color: 'green'
         },
@@ -58,7 +56,6 @@ const ModulesPage = () => {
           elements: ['CPU Design', 'Memory Systems', 'Assembly'],
           lassqatCount: 18,
           examCount: 6,
-          studentsCount: 142,
           rating: 4.5,
           color: 'purple'
         }
@@ -76,7 +73,6 @@ const ModulesPage = () => {
           elements: ['Java Basics', 'Inheritance', 'Polymorphism', 'Design Patterns'],
           lassqatCount: 42,
           examCount: 15,
-          studentsCount: 201,
           rating: 4.9,
           color: 'orange'
         },
@@ -88,7 +84,6 @@ const ModulesPage = () => {
           elements: ['SQL', 'Normalization', 'Transactions', 'NoSQL'],
           lassqatCount: 28,
           examCount: 10,
-          studentsCount: 167,
           rating: 4.6,
           color: 'cyan'
         },
@@ -100,7 +95,6 @@ const ModulesPage = () => {
           elements: ['TCP/IP', 'Routing', 'Security', 'Protocols'],
           lassqatCount: 35,
           examCount: 11,
-          studentsCount: 178,
           rating: 4.7,
           color: 'indigo'
         }
@@ -118,7 +112,6 @@ const ModulesPage = () => {
           elements: ['Machine Learning', 'Neural Networks', 'NLP', 'Computer Vision'],
           lassqatCount: 38,
           examCount: 13,
-          studentsCount: 145,
           rating: 4.8,
           color: 'pink'
         },
@@ -130,7 +123,6 @@ const ModulesPage = () => {
           elements: ['Android', 'iOS', 'React Native', 'Flutter'],
           lassqatCount: 22,
           examCount: 8,
-          studentsCount: 134,
           rating: 4.5,
           color: 'yellow'
         },
@@ -142,7 +134,6 @@ const ModulesPage = () => {
           elements: ['Cryptography', 'Ethical Hacking', 'Risk Assessment'],
           lassqatCount: 19,
           examCount: 7,
-          studentsCount: 98,
           rating: 4.6,
           color: 'red'
         }
@@ -232,10 +223,6 @@ const ModulesPage = () => {
                           <div className="flex items-center gap-2">
                             <Award className="w-4 h-4 text-muted-foreground" />
                             <span className="text-muted-foreground">{module.examCount} Exams</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Users className="w-4 h-4 text-muted-foreground" />
-                            <span className="text-muted-foreground">{module.studentsCount} Students</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <Star className="w-4 h-4 text-yellow-500 fill-current" />

@@ -19,7 +19,7 @@ const Profile = () => {
     rank: 'Niveau 7',
     badges: [
       { id: 1, name: 'Expert IA', desc: '50 Lassqat IA consultés', color: 'yellow' },
-      { id: 2, name: 'Collaborateur', desc: '5 sessions organisées', color: 'blue' },
+  { id: 2, name: 'Organisateur', desc: '5 sessions publiées', color: 'blue' },
     ],
   };
 

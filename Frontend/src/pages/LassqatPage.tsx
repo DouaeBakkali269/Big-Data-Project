@@ -26,10 +26,13 @@ import {
   ShieldCheck,
   ChartBar
 } from 'lucide-react';
+import { getCurrentUser } from '@/lib/user';
 
 const LassqatPage = () => {
-  const [selectedYear, setSelectedYear] = useState<string | null>(null);
-  const [selectedMajor, setSelectedMajor] = useState<string | null>(null);
+  // Auto-select the current user's promotion (year) and major to skip those steps
+  const user = getCurrentUser();
+  const [selectedYear, setSelectedYear] = useState<string | null>(user.year);
+  const [selectedMajor, setSelectedMajor] = useState<string | null>(user.major);
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
   const [selectedSemester, setSelectedSemester] = useState<string | null>(null); // S1..S4
   const [selectedPeriod, setSelectedPeriod] = useState<string | null>(null); // P1, P2
@@ -86,7 +89,6 @@ const LassqatPage = () => {
         icon: Calculator, 
         elements: ['Algèbre Linéaire', 'Probabilités', 'Statistiques'],
         lassqatCount: 24,
-        studentsCount: 156,
         rating: 4.7,
         color: 'blue'
       },
@@ -97,7 +99,6 @@ const LassqatPage = () => {
         icon: Code, 
         elements: ['Programmation C', 'Algorithmes', 'Structures de Données'],
         lassqatCount: 31,
-        studentsCount: 189,
         rating: 4.8,
         color: 'green'
       }
@@ -110,7 +111,6 @@ const LassqatPage = () => {
         icon: Code, 
         elements: ['Java Basics', 'Héritage', 'Polymorphisme', 'Design Patterns'],
         lassqatCount: 42,
-        studentsCount: 201,
         rating: 4.9,
         color: 'orange'
       },
@@ -121,7 +121,6 @@ const LassqatPage = () => {
         icon: Database, 
         elements: ['SQL', 'Normalisation', 'Transactions', 'NoSQL'],
         lassqatCount: 28,
-        studentsCount: 167,
         rating: 4.6,
         color: 'cyan'
       }
@@ -134,7 +133,6 @@ const LassqatPage = () => {
         icon: Brain, 
         elements: ['Machine Learning', 'Réseaux de Neurones', 'NLP', 'Computer Vision'],
         lassqatCount: 38,
-        studentsCount: 145,
         rating: 4.8,
         color: 'pink'
       },
@@ -145,7 +143,6 @@ const LassqatPage = () => {
         icon: Smartphone, 
         elements: ['Android', 'iOS', 'React Native', 'Flutter'],
         lassqatCount: 22,
-        studentsCount: 134,
         rating: 4.5,
         color: 'yellow'
       }
@@ -238,14 +235,6 @@ const LassqatPage = () => {
           <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 mb-6 text-sm text-muted-foreground">
-              <button onClick={resetToYears} className="hover:text-foreground">Années</button>
-              <ChevronRight className="w-4 h-4" />
-              <button onClick={resetToMajors} className="hover:text-foreground">{selectedYear}</button>
-              <ChevronRight className="w-4 h-4" />
-              <button onClick={resetToLevels} className="hover:text-foreground">
-                {majors.find(m => m.code === selectedMajor)?.code}
-              </button>
-              <ChevronRight className="w-4 h-4" />
               <button onClick={resetToSemesters} className="hover:text-foreground">{selectedLevel}</button>
               <ChevronRight className="w-4 h-4" />
               <button onClick={resetToPeriods} className="hover:text-foreground">{selectedSemester}</button>
@@ -270,10 +259,6 @@ const LassqatPage = () => {
                         <div className="flex items-center gap-1">
                           <FileText className="w-4 h-4" />
                           <span>{module.lassqatCount} Lassqat</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Users className="w-4 h-4" />
-                          <span>{module.studentsCount} Étudiants</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Star className="w-4 h-4 text-yellow-500 fill-current" />
@@ -342,14 +327,6 @@ const LassqatPage = () => {
           <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 mb-6 text-sm text-muted-foreground">
-              <button onClick={resetToYears} className="hover:text-foreground">Années</button>
-              <ChevronRight className="w-4 h-4" />
-              <button onClick={resetToMajors} className="hover:text-foreground">{selectedYear}</button>
-              <ChevronRight className="w-4 h-4" />
-              <button onClick={resetToLevels} className="hover:text-foreground">
-                {majors.find(m => m.code === selectedMajor)?.code}
-              </button>
-              <ChevronRight className="w-4 h-4" />
               <button onClick={resetToSemesters} className="hover:text-foreground">{selectedLevel}</button>
               <ChevronRight className="w-4 h-4" />
               <button onClick={resetToPeriods} className="hover:text-foreground">{selectedSemester}</button>
@@ -364,9 +341,6 @@ const LassqatPage = () => {
                   <h1 className="text-3xl font-bold text-foreground mb-2">
                     Modules — {selectedLevel} • {selectedSemester} • {selectedPeriod}
                   </h1>
-                  <p className="text-muted-foreground">
-                    {majors.find(m => m.code === selectedMajor)?.name} — Promotion {selectedYear}
-                  </p>
                 </div>
                 <Button onClick={resetToPeriods} variant="outline">
                   <ArrowLeft className="w-4 h-4 mr-2" />
@@ -419,8 +393,8 @@ const LassqatPage = () => {
                         <span className="text-muted-foreground">{module.lassqatCount} Lassqat</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">{module.studentsCount} Étudiants</span>
+                        <Star className="w-4 h-4 text-yellow-500" />
+                        <span className="text-muted-foreground">{module.rating}</span>
                       </div>
                     </div>
 
@@ -447,14 +421,6 @@ const LassqatPage = () => {
           <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 mb-6 text-sm text-muted-foreground">
-              <button onClick={resetToYears} className="hover:text-foreground">Années</button>
-              <ChevronRight className="w-4 h-4" />
-              <button onClick={resetToMajors} className="hover:text-foreground">{selectedYear}</button>
-              <ChevronRight className="w-4 h-4" />
-              <button onClick={resetToLevels} className="hover:text-foreground">
-                {majors.find(m => m.code === selectedMajor)?.code}
-              </button>
-              <ChevronRight className="w-4 h-4" />
               <span className="text-foreground font-medium">{selectedLevel}</span>
             </div>
 
@@ -500,25 +466,15 @@ const LassqatPage = () => {
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 mb-6 text-sm text-muted-foreground">
-            <button onClick={resetToYears} className="hover:text-foreground">Années</button>
-            <ChevronRight className="w-4 h-4" />
-            <button onClick={resetToMajors} className="hover:text-foreground">{selectedYear}</button>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-foreground font-medium">
-              {majors.find(m => m.code === selectedMajor)?.code}
-            </span>
+            <span className="text-foreground font-medium">{selectedLevel}</span>
           </div>
 
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-foreground mb-2">
-                  Semestres — {majors.find(m => m.code === selectedMajor)?.name}
-                </h1>
-                <p className="text-muted-foreground">
-                  {selectedLevel} — Promotion {selectedYear}
-                </p>
+                <h1 className="text-3xl font-bold text-foreground mb-2">Semestres — {selectedLevel}</h1>
+                <p className="text-muted-foreground">Choisissez le semestre</p>
               </div>
               <Button onClick={resetToLevels} variant="outline">
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -555,32 +511,17 @@ const LassqatPage = () => {
         <Navigation />
         
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-2 mb-6 text-sm text-muted-foreground">
-            <button onClick={resetToYears} className="hover:text-foreground">Années</button>
-            <ChevronRight className="w-4 h-4" />
-            <button onClick={resetToMajors} className="hover:text-foreground">{selectedYear}</button>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-foreground font-medium">
-              {majors.find(m => m.code === selectedMajor)?.code}
-            </span>
-          </div>
+          {/* Breadcrumb removed to simplify flow */}
+          <div className="mb-2" />
 
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-foreground mb-2">
-                  Niveaux - {majors.find(m => m.code === selectedMajor)?.name}
-                </h1>
-                <p className="text-muted-foreground">
-                  Promotion {selectedYear} - Choisissez votre niveau d'étude
-                </p>
+                <h1 className="text-3xl font-bold text-foreground mb-2">Choisissez votre niveau d'étude</h1>
+                <p className="text-muted-foreground">1A, 2A ou 3A</p>
               </div>
-              <Button onClick={resetToMajors} variant="outline">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Retour
-              </Button>
+              <div />
             </div>
           </div>
 
@@ -598,11 +539,7 @@ const LassqatPage = () => {
                   <CardDescription>
                     {level.moduleCount} modules disponibles
                   </CardDescription>
-                  {rememberedLevel === level.level && (
-                    <div className="mt-2">
-                      <Badge variant="outline">Sélectionné</Badge>
-                    </div>
-                  )}
+                  {/* Removed 'Sélectionné' marker */}
                 </CardHeader>
                 <CardContent className="text-center">
                   <Button className="w-full">
@@ -669,10 +606,10 @@ const LassqatPage = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Users className="w-4 h-4" />
-                      <span className="text-sm">{major.studentCount} étudiants</span>
+                      <span className="text-sm">{major.studentCount} membres</span>
                     </div>
                   </div>
                   <Button className="w-full">
@@ -716,7 +653,7 @@ const LassqatPage = () => {
                 <BookOpen className="w-12 h-12 text-primary mx-auto mb-4" />
                 <CardTitle className="text-2xl">Promotion {year.year}</CardTitle>
                 <CardDescription>
-                  {year.studentCount} étudiants
+                  {year.studentCount} inscrits
                 </CardDescription>
               </CardHeader>
               <CardContent className="text-center">
