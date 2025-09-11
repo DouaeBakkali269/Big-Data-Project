@@ -65,7 +65,7 @@ const SessionDetailsPage = () => {
             <CardTitle className="flex items-center gap-2">
               {session.title}
               <Badge variant="outline">{session.level}</Badge>
-              <Badge>{session.status}</Badge>
+              {session.status !== 'en_preparation' && <Badge>{session.status}</Badge>}
             </CardTitle>
             <CardDescription>{session.module} — {session.element}</CardDescription>
           </CardHeader>
