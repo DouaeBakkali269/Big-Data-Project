@@ -548,29 +548,6 @@ const LassqatPlanningPage = () => {
 
             {/* Statistiques removed as requested */}
 
-            {/* À venir (bientôt) */}
-            <Card className="shadow-card border-0 bg-gradient-card">
-              <CardHeader>
-                <CardTitle className="text-lg">À venir (bientôt)</CardTitle>
-                <CardDescription>Prochaines sessions selon votre niveau</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {filteredUpcoming.slice(0, 2).map(s => (
-                  <div key={s.id} className="p-3 border border-border rounded-lg bg-background/50">
-                    <div className="text-sm font-medium">{s.module} — {s.element}</div>
-                    <div className="text-xs text-muted-foreground flex items-center gap-2">
-                      <Calendar className="w-3 h-3" /> {s.date}
-                      <span>•</span>
-                      <Clock className="w-3 h-3" /> {s.time}
-                      <span className="ml-auto">{(() => { const m = minutesUntil(s.startISO); if (m <= 0 && !isExpired(s.startISO)) return 'En cours'; if (m > 0) { const h = Math.floor(m/60); const mm = m%60; return `${h>0? h+'h ' : ''}${mm}m`; } return ''; })()}</span>
-                    </div>
-                  </div>
-                ))}
-                {filteredUpcoming.length === 0 && (
-                  <div className="text-sm text-muted-foreground">Rien à venir pour {selectedLevel}.</div>
-                )}
-              </CardContent>
-            </Card>
           </div>
         </div>
       </main>
